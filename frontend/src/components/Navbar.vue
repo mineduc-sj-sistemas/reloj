@@ -16,6 +16,11 @@ const emit = defineEmits<{
   <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
       <div class="flex items-center space-x-3">
+        <img
+          src="/logoMinisterio.png"
+          alt="Ministerio de Educación"
+          class="h-10 w-auto object-contain bg-white/95 p-1 rounded-md shadow-sm border border-slate-600 hidden sm:block"
+        />
         <div class="p-2 bg-indigo-600 rounded-lg text-white shadow-lg">
           <Fingerprint class="w-6 h-6" />
         </div>
