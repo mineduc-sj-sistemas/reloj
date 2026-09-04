@@ -13,7 +13,7 @@ Route::post('/commands/queue', [DashboardController::class, 'queueCommand'])->na
 Route::post('/employees', [DashboardController::class, 'saveEmployee'])->name('employees.save');
 
 // Protocolo ADMS / PUSH de ZKTeco (MB20-VL y compatibles)
-Route::prefix('iclock')->group(function () {
+Route::prefix('iclock')->middleware('throttle:adms')->group(function () {
     Route::get('/cdata', [AdmsController::class, 'handshake']);
     Route::post('/cdata', [AdmsController::class, 'receiveData']);
     Route::get('/getrequest', [AdmsController::class, 'getCommands']);

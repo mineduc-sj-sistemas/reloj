@@ -109,6 +109,11 @@ class DashboardController extends Controller
             'address' => 'nullable|string|max:200',
         ]);
 
+        $validated['name'] = strip_tags(trim($validated['name']));
+        if (isset($validated['code'])) $validated['code'] = strip_tags(trim($validated['code']));
+        if (isset($validated['legal_instrument'])) $validated['legal_instrument'] = strip_tags(trim($validated['legal_instrument']));
+        if (isset($validated['address'])) $validated['address'] = strip_tags(trim($validated['address']));
+
         $department = Department::create($validated);
 
         if ($request->wantsJson() || $request->is('api/*')) {
@@ -130,11 +135,14 @@ class DashboardController extends Controller
             'location_description' => 'nullable|string|max:150',
         ]);
 
+        $alias = isset($validated['alias']) ? strip_tags(trim($validated['alias'])) : null;
+        $location = isset($validated['location_description']) ? strip_tags(trim($validated['location_description'])) : null;
+
         $device = Device::findOrFail($id);
         $device->update([
-            'alias' => $validated['alias'] ?? null,
+            'alias' => $alias,
             'department_id' => $validated['department_id'] ?? null,
-            'location_description' => $validated['location_description'] ?? null,
+            'location_description' => $location,
         ]);
 
         if ($request->wantsJson() || $request->is('api/*')) {
@@ -151,17 +159,21 @@ class DashboardController extends Controller
     public function saveEmployee(Request $request)
     {
         $validated = $request->validate([
-            'pin' => 'required|string|max:50',
+            'pin' => 'required|string|max:50|regex:/^[a-zA-Z0-9_-]+$/',
             'name' => 'required|string|max:150',
             'dni' => 'nullable|string|max:20',
             'department_id' => 'nullable|exists:departments,id',
         ]);
 
+        $pin = trim($validated['pin']);
+        $name = strip_tags(trim($validated['name']));
+        $dni = isset($validated['dni']) ? strip_tags(trim($validated['dni'])) : null;
+
         $employee = Employee::updateOrCreate(
-            ['pin' => $validated['pin']],
+            ['pin' => $pin],
             [
-                'name' => $validated['name'],
-                'dni' => $validated['dni'] ?? null,
+                'name' => $name,
+                'dni' => $dni,
                 'department_id' => $validated['department_id'] ?? null,
             ]
         );

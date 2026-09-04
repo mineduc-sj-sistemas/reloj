@@ -13,10 +13,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
+
+        // Dispositivos ZKTeco ADMS envían peticiones POST sin tokens CSRF
         $middleware->validateCsrfTokens(except: [
             'iclock/*',
             'iclock',
-            'api/simulate-punch',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

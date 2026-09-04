@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "laravel-security": {
+      "source": "affaan-m/ecc",
+      "sourceType": "github",
+      "skillPath": "skills/laravel-security/SKILL.md",
+      "computedHash": "37312e1d7d543c7e0b926c74c4bde87cb95300d7c8549e0a3974c9c44a34a84c"
+    }
+  }
+}
