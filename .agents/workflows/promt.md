@@ -1,10 +1,58 @@
 ---
-description:  estructurar el software propio en Laravel para administrar los equipos ZKTeco MB20-VL en múltiples dependencias, vas a poder cubrir tres frentes críticos:
+description: Requerimientos
 ---
 
-1. La Arquitectura de Comunicación (ADMS / Protocolo PUSH)Dado que las dependencias están distribuidas, no es eficiente usar sockets UDP directos hacia cada reloj desde la aplicación web. El camino óptimo es configurar el MB20-VL en su sección de red apuntando a tu servidor Laravel (Protocolo ADMS). El reloj enviará peticiones HTTP (GET/POST) ordinarias.Librerías de Ingesta: En lugar de codificar el protocolo ADMS desde cero, existen paquetes de la comunidad específicos para esto, como athwari/laravel-zkteco-adms en GitHub. Este paquete te ayuda a crear los endpoints en tu enrutador (routes/api.php) que interpretan nativamente las cadenas de texto plano que los dispositivos "empujan" (fichajes en tiempo real, estado del hardware y sincronización de usuarios).2. Estructura de Datos Multirepartición (Eloquent ORM)A diferencia de los softwares enlatados comerciales que suelen limitar los campos de organización a esquemas corporativos básicos de "Empresa -> Departamento", con las migraciones y modelos de Laravel podés reflejar la estructura estatal real:Campos Personalizados de Instrumentación: Podés definir tablas relacionales específicas que requieran de forma obligatoria campos detallados para instrumentaciones legales (resoluciones, decretos), creación de establecimientos físicos, y la asignación exacta de categorías y radios de prestación de servicio.Multitenancy Jerárquico: Con paquetes como spatie/laravel-permission o implementando un esquema de Multi-tenancy, podés aislar las bases de datos lógicas o aplicar alcances (Global Scopes) en Eloquent. Así, el Administrador del Ministerio "A" solo interactúa con los agentes y fichajes vinculados a sus dependencias y radios autorizados, mientras que la Dirección Central de Personal audita toda la provincia o municipio.3. Reportes con Firmas Electrónicas IntegradasEl sector público exige procesos de auditoría estrictos sobre los reportes de presentismo. Laravel te permite resolver esto de manera nativa y transparente:Validación de Reportes: Podés generar un flujo de trabajo (Workflow) donde, al cierre del mes, el encargado de personal de cada dependencia revisa las novedades (fichajes, justificaciones, licencias). Al confirmar que todo está correcto, el sistema genera el reporte consolidado en PDF (usando librerías como barryvdh/laravel-dompdf).Firma Electrónica Vinculada: Al momento de la aprobación, en lugar de depender de un token físico de firma digital (que ralentiza el proceso administrativo), tu backend puede implementar un mecanismo de firma electrónica interna. El sistema registra criptográficamente (por ejemplo, mediante un hash SHA-256 en la base de datos) el consentimiento, la fecha exacta y las credenciales del técnico o autoridad que realiza la validación, dejando una pista de auditoría inalterable que vincula directamente al firmante con el reporte emitido.El flujo de sincronización ideal en LaravelEl empleado estatal asienta su rostro o huella en el MB20-VL de una repartición aleatoria.El dispositivo envía un webhook HTTP a tu controlador de Laravel.Laravel procesa el evento, identifica el ID del empleado, contrasta el radio y la categoría horaria que le corresponde para ese día específico, y almacena el registro limpio en tu base de datos centralizada (ej. PostgreSQL o MySQL).Si hay discrepancias (por ejemplo, fichó fuera de su radio asignado), el framework puede disparar una notificación en tiempo real a través de Laravel Echo o un correo electrónico institucional al supervisor.
+necesito que primero que se respete las skill, sin olvidarse de B:\test_reloj\.agents\skills\design, como base del diseño
+
+requerimientos por vistas
+
+1 vista de Relojes
+
+donde estará un dasboard con los datos revelantes
+
+con alta de relojes teniendo en cuenta estos datos Número de Serie: CO8D230660045, Dirección IP: 10.220.53.42
+asociarlos a un Nombre / Alias Identificador del Reloj, Dependencia / Escuela Asignada , Ubicación Física Específica
+
+si bien estamos trabajando en este modelo ZKTeco MB20-VL, la idea es usarlo en los otros modelos ZKTeco MB20-VL, pero puede haber modelos distintos, eso significa que debe haber componentes para distintos modelos, por si funcionan diferentes, me refiero a librerias ect.
+
+revisar si el tiempo de respuesta 2026-09-04 13:25:50 /iclock/getrequest no es muy corto, lo digo por si hay muchos, 
+
+una vista mapa en donde estan ubicados los sectores, por supuesto que algunos habrá mayores cantidades, pero ya vemos que podemos implementar
+
+Notificar cuando hay uno offline, para mesa de ayuda o reclamos
+
+2 - Usuarios
+
+El sistema debe detectar cuando haya un usuario nuevo, si haberse asociado a datos personales completos.
+
+El usuario puede trabajar en varios lugares, debe poder asociarse segun donde marque su entrada y salida, con el lugar asociado, con el turno designado y los dias 
+
+el ideal y comum es un solo lugar, un solo turno y todos los dias, pero debe preveer esa volatilidad, ademas si yo marco en mi oficina, y de repente me llaman al centro civico, poder cerrar ahi la carga laboral
+
+debe manejarse tiempos de 6, 7 y 8 horas, 
+
+si es planta debe trabajar 30 horas semanales 8 diarias , si es contratado 20 horas 6 diarias, pero pueden el planta trabajar 7 horas y el ultimo completar las que falta, pero no es el caso del contratado, o porteros (personal de maestranza)
+
+manejar tardanza, tardanza permitida y tarzanda intoleroble, que haya completardo la carga horaria o no, 
+
+manejar periodo de licencias por vacaciones, por enfermedades o cambio de tarea que no pueda logearse, adjuntando una nota o escribir alguna especie de validación, eso ya lo veremos
+
+manejar un dashboard que iremos puliendo.
+
+
+quiero que leas todo, que analices que puede estar faltando, alguna sugerencia, esto es para el ministerio de educacion, los lugares pueden ser como ejemplo 
+
+depósito Central / area de sistemas /
+depósito Central / Oficina Depsósito /
+depósito Central / Gabinete Técnicos /
+depósito Central / Choferes /
+
+
+usando el mismo reloj para el caso de desposito central, hay otros lugares pero seria el fisico / area de trabajo, por ejemplo Establecimientos / Escuela X, Centro Civico / Oficina de despacho
+
+
+quiere decir que el usuario debe tener asignado en que lugar esta trabajando, por mas que use el reloj para todas las oficinas.  
 
 
 
 
-teniendo en cuenta probar con sqlite, o al menos que vea que me responda y verlo desde un api o algo por estilo, la idea es ver si puedo evitar usar el software oficial con licencia
