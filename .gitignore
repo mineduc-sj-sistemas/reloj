@@ -1,0 +1,48 @@
+# Node & npm
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-debug.log*
+
+# Environment files
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+frontend/.env.local
+frontend/.env.*.local
+
+# Backend / Laravel
+backend/vendor/
+backend/storage/*.key
+backend/storage/pail
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/storage/logs/*
+backend/public/storage
+backend/public/build
+backend/public/hot
+backend/database/*.sqlite
+backend/database/*.sqlite-journal
+backend/database/*.sqlite-shm
+backend/database/*.sqlite-wal
+
+# Frontend / Vite
+frontend/dist/
+frontend/node_modules/
+
+# Logs and caches
+*.log
+.phpunit.result.cache
+.phpunit.cache/
+.fleet
+.idea/
+.vscode/
+.zed/
+.DS_Store
+Thumbs.db

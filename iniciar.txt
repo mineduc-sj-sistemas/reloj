@@ -1,0 +1,12 @@
+# Para iniciar TODO junto (Backend + Frontend):
+npm run dev
+
+# --- O iniciar por separado en terminales distintas ---
+
+# 1. Backend (API + Escucha de Relojes ZKTeco ADMS):
+npm run dev:backend
+# (o: cd backend && php artisan serve --host=0.0.0.0 --port=8000)
+
+# 2. Frontend (Dashboard Reactivo Vue 3 + TypeScript):
+npm run dev:frontend
+# (o: cd frontend && npm run dev)

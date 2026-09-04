@@ -1,0 +1,15 @@
+{
+    "$schema": "https://www.schemastore.org/package.json",
+    "name": "reloj-monorepo",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "concurrently -n \"backend,frontend\" -c \"blue,green\" \"npm run dev:backend\" \"npm run dev:frontend\"",
+        "dev:backend": "cd backend && php artisan serve --host=0.0.0.0 --port=8000",
+        "dev:frontend": "cd frontend && npm run dev",
+        "build": "cd frontend && npm run build"
+    },
+    "devDependencies": {
+        "concurrently": "^10.0.3"
+    }
+}
