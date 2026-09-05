@@ -71,14 +71,14 @@ El desarrollo se organiza en **sprints de complejidad incremental**. Cada sprint
 - `edificios` — id, nombre, direccion, lat, lng
 - `areas` — id, edificio_id, nombre
 - `sectores` — id, area_id, nombre
-- `empleados` — id, nombre, apellido, dni, legajo, pin_reloj (string, nullable, unique), sexo (string, nullable), fecha_nacimiento (date, nullable), tipo_contrato (planta_permanente), activo, foto
+- `empleados` — id, nombre, apellido, dni, legajo, pin_reloj (string, nullable, unique), sexo (string, nullable), fecha_nacimiento (date, nullable), tipo_contrato (planta_permanente), activo, motivo_baja (enum: renuncia|fallecimiento|abandono_cargo|jubilacion|cese_contrato|otro, nullable), fecha_baja (date, nullable), resolucion_baja (string, nullable), deleted_at (timestamp SoftDeletes), foto
 - `turnos` — id, nombre, hora_inicio, hora_fin, horas_diarias, horas_semanales, es_plantilla (boolean, default true)
 - `asignaciones_laborales` — id, empleado_id, sector_id, turno_id, dias_semana (JSON), fecha_desde, fecha_hasta (nullable), horario_personalizado_inicio (nullable), horario_personalizado_fin (nullable), justificacion_cambio (nullable), activa
 - `excepciones_turno` — id, empleado_id, fecha, hora_inicio, hora_fin, justificacion, aprobado_por (user_id)
 - `dispositivos` — id, serie, ip, alias, sector_id (nullable), modelo, fabricante, protocolo (adms|sdk), activo, ultimo_heartbeat (timestamp, nullable)
 - `marcaciones_brutas` — id, empleado_id (nullable), pin_marcado, dispositivo_id, marcado_en (timestamp), direccion (entrada|salida|desconocida), sincronizado
 - `jornadas_calculadas` — id, empleado_id, fecha, entrada_en, salida_en, dispositivo_entrada_id, dispositivo_salida_id, es_itinerante (default false), horas_trabajadas, estado (presente|ausente|tardanza_permitida|tardanza_intolerable|licencia|feriado|justificado)
-- `configuraciones` — tolerancias de tardanza (minutos), tolerancia intolerable
+- `configuraciones` — tolerancias de tardanza (minutos), tolerancia intolerable, dias_consecutivos_alerta_abandono (default: 5)
 - `notificaciones` — alertas del sistema
 
 #### 1.2 Funcionalidad y Pruebas
@@ -91,7 +91,11 @@ El desarrollo se organiza en **sprints de complejidad incremental**. Cada sprint
   - Si el reloj está conectado: presencia en tiempo real, entradas, salidas y tardanzas.
   - **Modo Preparación (sin reloj asignado):** Permite organizar y consultar la nómina de empleados antes de instalar el equipo físico, mostrando banner informativo ámbar.
 - Cálculo de jornada simple (entrada y salida en el mismo sector) y cálculo de tardanzas.
-- **Criterio de Validación:** Probar con reloj real o simulador en un sector con empleados de planta permanente, verificando el cálculo de horas.
+- **Política de Bajas del Personal:**
+  - En sistema: `SoftDeletes` (`deleted_at`), preservando intacto el historial probatorio de marcaciones para fines legales y de auditoría.
+  - En reloj físico: al confirmar la baja, el sistema despacha comando ADMS `DATA DELETE USER PIN=...` para eliminar biometría y usuario de la memoria del equipo ZKTeco, liberando espacio.
+- **Alerta de Ausentismo Crónico / Presunto Abandono:** Alerta visual a la oficina de personal cuando un agente acumula $N$ ausencias consecutivas injustificadas (sin parte médico ni licencia cargada).
+- **Criterio de Validación:** Probar con reloj real o simulador en un sector con empleados de planta permanente, verificando el cálculo de horas y el comando de des-enrolamiento en baja.
 
 ---
 
@@ -101,19 +105,32 @@ El desarrollo se organiza en **sprints de complejidad incremental**. Cada sprint
 
 #### 2.1 Base de Datos Adicional
 - `historial_pins_reloj` — id, empleado_id, pin_anterior, pin_nuevo, origen (`auto_match_dni`|`manual`|`reloj_adms`), cambiado_en, motivo
+- `operativos_especiales` — id, nombre, memo_resolucion, fecha_desde, fecha_hasta, modalidad (dia_habil_sin_reloj|fin_de_semana_refuerzo|mixto), horas_reconocidas_por_dia (decimal), creado_por (user_id), created_at
+- `empleados_operativos` — id, operativo_id, empleado_id, fecha, horas_reconocidas, tipo_compensacion (franco_compensatorio|horas_extras|jornal_completo)
+- `banco_horas_compensatorias` — id, empleado_id, operativo_id (nullable), tipo (credito|debito), horas (decimal), saldo_resultante (decimal), fecha_movimiento, motivo, aprobado_por (user_id)
 
-#### 2.2 Algoritmo de Jornada Multi-Sede (`JornadaService`)
+#### 2.2 Algoritmo de Jornada Multi-Sede y Salidas en Otra Dependencia (`JornadaService`)
 - Consolidación por `(empleado_id, fecha)` unificando marcaciones de distintos dispositivos:
   - Primera marca del día = Entrada (`dispositivo_entrada_id`).
   - Última marca del día = Salida (`dispositivo_salida_id`).
-  - Si los edificios difieren: marca `es_itinerante = true`. Las horas se acreditan al sector laboral de origen del agente.
-- En el dashboard del sector de origen: figura `Presente (Salida en Sede Central)` sin registrar falta de salida.
-- En el dashboard del edificio visitado: figura en solapa secundaria de personal en comisión.
+  - **Distinción entre Perfil y Evento del Día:**
+    - **Empleado de Planta Fija con Salida Externa (caso habitual):** Si un agente con puesto fijo (ej. Depósito) asiste a una reunión o gestión en otra sede (ej. Centro Cívico) y ficha la salida allá, la jornada se computa como normal `Presente` con la indicación `(Entrada: Depósito | Salida: Centro Cívico)`. No genera faltas de salida en su sector de origen ni lo etiqueta erróneamente como personal itinerante.
+    - **Personal Móvil Homologado:** Choferes, inspectores o técnicos de campo que por función laboral tienen habilitación permanente multi-sede.
+- En el dashboard del sector de origen: el agente figura `Presente` con total de horas cumplidas y detalle de los edificios de entrada y salida.
+- En el dashboard del edificio visitado: la marcación queda registrada como constancia de paso de agente de otra dependencia, sin alterar la nómina local.
 
-#### 2.3 Auto-Match Inteligente de PIN a DNI
+#### 2.3 Módulo de Operativos Especiales y Banco de Horas Compensatorias
+**Ruta Vue:** `/operativos`
+- **Contexto Operativo:** Afectaciones extraordinarias de personal fuera de sede (ej. entregas de notebooks en Estadio Cantoni, censos, refuerzos de depósito en sábados/domingos) donde no hay reloj disponible o la autoridad instruye no fichar para garantizar equidad.
+- **Flujo de Gestión Masiva:**
+  - Creación del operativo con Nº de Memo/Resolución ministerial y asignación masiva de la nómina de empleados afectados.
+  - **Días hábiles sin reloj (ej. lunes de operativo):** El sistema genera la jornada automática como `Presente (Operativo Especial: Cantoni)` acreditando el 100% de la carga horaria habitual (evita ausencias indebidas y trabajo manual por persona).
+  - **Fines de semana y feriados (sábados/domingos de refuerzo):** Las horas reconocidas por la autoridad (ej. 6hs diarias) se computan automáticamente en la cuenta corriente del empleado (`banco_horas_compensatorias`) para futuros días francos compensatorios o para el listado oficial de liquidación de servicios extraordinarios.
+
+#### 2.4 Auto-Match Inteligente de PIN a DNI
 - Si en un reloj se cambia un ID de 4 dígitos a DNI: al recibir la marcación, el sistema busca coincidencia en `empleados.dni`.
 - Auto-asocia la marca a la persona, actualiza `pin_reloj = DNI` y guarda el cambio en `historial_pins_reloj`. Responde a: *"¿A qué ID pertenecía antes?"*.
-- **Criterio de Validación:** Fichar entrada en reloj A, salida en reloj B, y probar cambio de PIN en el reloj comprobando auto-detección e historial.
+- **Criterio de Validación:** Fichar entrada en reloj A, salida en reloj B, crear un operativo especial afectando a empleados en día hábil y fin de semana, y verificar acreditación correcta en jornadas y banco de horas.
 
 ---
 
@@ -229,10 +246,13 @@ El desarrollo se organiza en **sprints de complejidad incremental**. Cada sprint
 - [ ] Tablero del sector en vivo (`/sectores/:id/dashboard`) con telemetría online y con banner preventivo en Modo Preparación.
 - [ ] Cálculo de jornada simple (entrada/salida en el mismo sector) y tolerancias de tardanza.
  
-### Sprint 2 — Multi-Sector e Itinerancia Básica
+### Sprint 2 — Multi-Sector, Operativos e Itinerancia Básica
 - [ ] Consolidación multi-sede en `JornadaService` (primera entrada y última salida sin importar el reloj).
 - [ ] Atribución de horas al sector formal del empleado con flag `es_itinerante = true`.
 - [ ] Tableros de origen y destino reflejan adecuadamente la presencia sin registrar faltas de salida.
+- [ ] Módulo de Operativos Especiales (`/operativos`): carga masiva de personal afectado por Memo/Resolución ministerial.
+- [ ] Justificación automática del 100% de la jornada para operativos en días hábiles sin reloj disponible (evita ausencias indebidas).
+- [ ] Banco de horas compensatorias (`banco_horas_compensatorias`) para refuerzos en sábados, domingos y feriados.
 - [ ] Auto-match inteligente al cambiar PIN a DNI en el reloj y registro de auditoría en `historial_pins_reloj`.
  
 ### Sprint 3 — Distribución Biométrica y Clave

@@ -56,10 +56,17 @@ erDiagram
 - `tipo_contrato`: `planta_permanente` (Sprint 1), `portero` (Sprint 4) y `contratado` (Sprint 5).
 - `permite_marcar_por_clave`: Booleano (restringido a choferes o personal sin biometría en destino).
 - `alcance_biometrico`: Enum (`sector_habitual`, `sector_mas_central`, `red_global`, `comision_temporal`).
-- `activo`: Booleano para baja lógica.
+- `activo`: Booleano para baja lógica rápida.
+- `motivo_baja`, `fecha_baja`, `resolucion_baja`: Metadatos de cese laboral (renuncia, fallecimiento, abandono, jubilación).
+- `deleted_at`: SoftDeletes de Laravel. Impide que el agente figure en los tableros del día a día, pero preserva íntegro el valor probatorio de sus marcaciones históricas ante auditorías o sumarios. Al activarse, despacha `DATA DELETE USER` al reloj físico.
 
 ### Tabla `historial_pins_reloj` (Trazabilidad y Auditoría)
 - `id`, `empleado_id`, `pin_anterior`, `pin_nuevo`, `origen` (`auto_match_dni` | `manual` | `reloj_adms`), `cambiado_en`, `motivo`.
+
+### Módulo de Operativos Especiales y Banco de Horas
+- `operativos_especiales`: `id`, `nombre`, `memo_resolucion`, `fecha_desde`, `fecha_hasta`, `modalidad`, `horas_reconocidas_por_dia`.
+- `empleados_operativos`: Nómina afectada al operativo masivo por disposición de la autoridad.
+- `banco_horas_compensatorias`: Cuenta corriente de horas (`credito`/`debito`) para acumular y compensar fines de semana trabajados o generar listas para liquidación de servicios extraordinarios.
 
 ### Tabla `biometria_templates` y `comisiones_biometricas`
 - `biometria_templates`: Almacena el template matemático (rostro/huella) obtenido en el primer enrolamiento.

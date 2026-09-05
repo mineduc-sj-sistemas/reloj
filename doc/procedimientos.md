@@ -69,8 +69,18 @@ Para evitar saturar la memoria de los relojes ZKTeco MB20-VL (límite de 500 a 1
 2. **Personal Móvil Homologado (Choferes / Inspectores / Técnicos de Sistemas):**
    - En su ficha se asigna `alcance_biometrico = red_global` o `sector_mas_central`.
    - El sistema encola automáticamente la distribución de su plantilla biométrica a los equipos correspondientes.
-3. **Porteros de Urgencia / Reemplazos Temporales en Escuelas:**
-   - Desde la ficha del agente, el operador genera una **Comisión Temporal** seleccionando la escuela de destino y el rango de fechas (ej. 15 días).
-   - El servidor despacha el comando ADMS `DATA UPDATE BIODATA` al reloj de esa escuela.
-   - El portero llega a la escuela y su rostro es reconocido al instante, sin necesidad de enrolamiento presencial.
-   - Al finalizar el período de reemplazo, el sistema encola la remoción del registro en el reloj para liberar cupo de memoria local.
+## 6. Procedimiento de Baja de Personal y Des-enrolamiento en Relojes
+
+Cuando un agente cesa en sus funciones (renuncia, fallecimiento, jubilación, fin de contrato o abandono de servicio):
+
+1. **Gestión en el Sistema:**
+   - El operador con rol `jefe` o `super_admin` accede a la ficha del agente en `/usuarios/:id`.
+   - Selecciona **"Dar de Baja"** e ingresa:
+     - **Motivo:** Renuncia, Fallecimiento, Jubilación, Abandono de Cargo, Cese de Contrato u Otro.
+     - **Fecha de Baja:** Fecha efectiva del cese.
+     - **Nº de Resolución / Expediente:** Referencia administrativa formal.
+2. **Consecuencias Técnicas Inmediatas:**
+   - **En Base de Datos:** Se aplica `SoftDeletes` (`deleted_at`). El agente queda excluido de los tableros de asistencia y nóminas activas, pero sus registros pasados quedan protegidos para fines legales y sumarios.
+   - **En los Relojes Físicos:** El sistema localiza los dispositivos donde el agente tenía presencia (sector habitual o comisiones activas) y encola el comando ADMS:
+     `DATA DELETE USER PIN=[pin_o_dni]`
+   - En la próxima sincronización del equipo biométrico, el usuario, huellas y rostros se eliminan físicamente del aparato, impidiendo marcaciones no autorizadas y recuperando espacio en memoria.
