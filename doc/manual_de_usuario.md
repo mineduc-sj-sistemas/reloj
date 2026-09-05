@@ -59,20 +59,21 @@ Permite a los encargados de área o personal administrativo visualizar exclusiva
 
 ---
 
-## 5. Operativos Especiales y Banco de Horas Compensatorias (`/operativos`)
+## 5. Operativos Especiales, Banco de Horas y Devolución Semanal (`/operativos`)
 
-Diseñado para eventos extraordinarios fuera de sede (ej. entrega de notebooks en Estadio Cantoni, censos, refuerzos de fin de semana en depósito) donde no hay reloj disponible o la autoridad ordena no fichar para garantizar equidad entre todo el equipo:
+### Banco de Horas Compensatorias (Exclusivo de Operativos Especiales)
+- **Regla Estricta:** El banco de horas **no se alimenta por permanencia voluntaria** fuera de hora de ningún agente. Quedarse más tiempo en la oficina no genera horas compensatorias. No está permitido trabajar 40 horas una semana para trabajar 20 la siguiente por decisión propia.
+- **Único origen habilitado:** Resoluciones oficiales o Memos de la autoridad para **Operativos Especiales** (fines de semana o refuerzos de depósito). Solo estas horas aprobadas se acreditan a favor del agente para futuros francos o liquidación extraordinaria.
 
-1. **Creación del Operativo:**
-   - La autoridad (`jefe` o `super_admin`) carga el operativo indicando Nombre, Nº de Memo/Resolución ministerial y rango de fechas.
-   - Selecciona la nómina completa de agentes afectados (individualmente o por sector).
-   - Define las horas reconocidas por jornada.
-2. **Impacto en el Día Hábil (ej. Lunes en el Cantoni sin reloj):**
-   - El sistema exime de fichar a los agentes afectados y genera automáticamente el estado:  
-     🟢 `Presente (Operativo Especial: Cantoni)` acreditando el 100% de la carga horaria del turno. Evita ausencias injustificadas y la carga manual agente por agente.
-3. **Impacto en Fin de Semana / Feriado (Sábados y Domingos de refuerzo):**
-   - Las horas autorizadas se acreditan en el **Banco de Horas Compensatorias** de cada agente.
-   - El empleado puede consultar su saldo de horas acumuladas para solicitar días francos compensatorios futuros o para la confección del listado oficial de liquidación de servicios extraordinarios.
+### Permisos de Salida con Devolución Intra-Semanal (Carga Fija de 30 hs)
+Permite gestionar la flexibilidad horaria reglamentaria dentro de los días hábiles ordinarios sin alterar la carga semanal obligatoria:
+- **Casos de Uso:**
+  - Salir 1 hora antes de lunes a jueves (4 hs adeudadas) y devolverlas completas quedándose 4 horas más el viernes.
+  - Salir 1 hora antes 2 días (2 hs adeudadas) y devolverlas juntas en 1 solo día o en dos días (1 hora cada uno).
+- **Control del Sistema:**
+  - El jefe autoriza el compromiso de devolución para esa semana en el sistema.
+  - El sistema no sanciona la salida anticipada y verifica al cierre del día viernes que el total de horas acumuladas en la semana alcance exactamente las **30 horas** (o la carga del turno asignado).
+  - Si el agente no devolvió las horas acordadas al finalizar la semana, el saldo faltante pasa a liquidación como débito horario.
 
 ---
 
