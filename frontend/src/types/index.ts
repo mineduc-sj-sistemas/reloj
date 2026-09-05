@@ -29,6 +29,7 @@ export interface AttendanceLog {
   employee_department: string | null;
   punch_time: string;
   status_label: string;
+  verify_type?: number;
   verify_type_label: string;
 }
 

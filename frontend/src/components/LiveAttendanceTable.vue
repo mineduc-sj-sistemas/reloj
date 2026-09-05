@@ -1,10 +1,44 @@
 <script setup lang="ts">
 import type { AttendanceLog } from '../types';
-import { History, Fingerprint } from 'lucide-vue-next';
+import {
+  History,
+  Fingerprint,
+  ScanFace,
+  KeyRound,
+  CreditCard,
+  Hand,
+} from 'lucide-vue-next';
 
 defineProps<{
   logs: AttendanceLog[];
 }>();
+
+function getVerifyIcon(log: AttendanceLog) {
+  const label = (log.verify_type_label || '').toLowerCase();
+  const type = log.verify_type;
+
+  // Reconocimiento Facial
+  if (type === 15 || label.includes('facial') || label.includes('rostro')) {
+    return ScanFace;
+  }
+  // Huella Dactilar
+  if (type === 1 || type === 4 || label.includes('huella')) {
+    return Fingerprint;
+  }
+  // Contraseña / PIN
+  if (type === 0 || type === 3 || label.includes('contraseña') || label.includes('pin') || label.includes('clave')) {
+    return KeyRound;
+  }
+  // Tarjeta / RFID
+  if (type === 2 || label.includes('tarjeta') || label.includes('rfid')) {
+    return CreditCard;
+  }
+  // Palma
+  if (type === 25 || label.includes('palma')) {
+    return Hand;
+  }
+  return Fingerprint;
+}
 </script>
 
 <template>
@@ -85,10 +119,10 @@ defineProps<{
             </td>
 
             <!-- Método de Verificación -->
-            <td class="py-2.5 px-4 text-black/80 font-medium">
-              <span class="flex items-center gap-1">
-                <Fingerprint class="w-3.5 h-3.5 text-brand-orange" />
-                {{ log.verify_type_label }}
+            <td class="py-2.5 px-4 text-black font-semibold">
+              <span class="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2 py-1 rounded-md text-xs">
+                <component :is="getVerifyIcon(log)" class="w-4 h-4 text-brand-orange shrink-0" />
+                <span class="text-black">{{ log.verify_type_label }}</span>
               </span>
             </td>
           </tr>

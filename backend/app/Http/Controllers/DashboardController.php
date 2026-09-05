@@ -62,6 +62,7 @@ class DashboardController extends Controller
                     'employee_department' => $l->employee?->department_text ?? $l->employee?->department?->name,
                     'punch_time' => $l->punch_time->format('Y-m-d H:i:s'),
                     'status_label' => $l->status_label,
+                    'verify_type' => $l->verify_type,
                     'verify_type_label' => $l->verify_type_label,
                 ];
             });
