@@ -126,11 +126,11 @@ El desarrollo se organiza en **sprints de complejidad incremental**. Cada sprint
   - **Regla estricta:** El banco de horas NO se alimenta por permanencia voluntaria de ningún empleado fuera de hora. No se permite acumular horas en una semana para restar en otra por cuenta propia.
   - **Único origen válido:** Resoluciones o Memos de la autoridad ministerial para **Operativos Especiales** (fines de semana, feriados o refuerzos masivos). Solo esas horas autorizadas ingresan al `banco_horas_compensatorias`.
   
-- **Régimen de Permisos con Devolución Intra-Semanal (Carga Fija de 30/35/40 hs):**
-  - Para situaciones particulares donde un agente necesita retirarse antes durante la semana laboral habitual (ej. 1 hora antes 4 días y devolver 4 horas el viernes; o salir 1 hora antes 2 días y devolver 2 horas en un día o repartido en dos):
-  - **Compromiso de Devolución:** El jefe autoriza el esquema de retiro anticipado y el cronograma pactado de devolución dentro de la **misma semana**.
-  - **Cómputo en `JornadaService`:** El sistema no penaliza los retiros anticipados autorizados si al cierre del ciclo semanal el balance total de horas trabajadas cumple con la carga legal pactada (ej. 30 horas semanales).
-  - Si al cerrar la semana quedan horas sin devolver, se imputan como débito a descontar.
+- **Balance Automático Intra-Semanal (Carga Fija de 30/35/40 hs sin burocracia):**
+  - **Sin autorización previa requerida:** El empleado tiene la flexibilidad de compensar sus horas dentro de la misma semana de trabajo (ej. salir 1 hora antes de lunes a jueves y devolverlas quedándose 4 horas más el viernes; o salir 1 hora antes 2 días y devolverlas juntas en 1 día o repartidas en 2).
+  - **Cálculo Automático por `JornadaService`:** El sistema no exige trámites ni formularios de aprobación previa. Al cierre del viernes, el motor calcula la sumatoria total de horas trabajadas en la semana:
+    - Si la sumatoria semanal cumple con la carga pactada (ej. $\ge$ 30 horas): la semana queda cumplida al 100% en verde.
+    - Si al finalizar la semana quedan horas adeudadas no devueltas, únicamente ese saldo faltante pasa como débito horario.
 
 #### 2.4 Auto-Match Inteligente de PIN a DNI
 - Si en un reloj se cambia un ID de 4 dígitos a DNI: al recibir la marcación, el sistema busca coincidencia en `empleados.dni`.

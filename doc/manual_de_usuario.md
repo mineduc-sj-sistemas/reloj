@@ -65,15 +65,16 @@ Permite a los encargados de área o personal administrativo visualizar exclusiva
 - **Regla Estricta:** El banco de horas **no se alimenta por permanencia voluntaria** fuera de hora de ningún agente. Quedarse más tiempo en la oficina no genera horas compensatorias. No está permitido trabajar 40 horas una semana para trabajar 20 la siguiente por decisión propia.
 - **Único origen habilitado:** Resoluciones oficiales o Memos de la autoridad para **Operativos Especiales** (fines de semana o refuerzos de depósito). Solo estas horas aprobadas se acreditan a favor del agente para futuros francos o liquidación extraordinaria.
 
-### Permisos de Salida con Devolución Intra-Semanal (Carga Fija de 30 hs)
-Permite gestionar la flexibilidad horaria reglamentaria dentro de los días hábiles ordinarios sin alterar la carga semanal obligatoria:
-- **Casos de Uso:**
+### Balance Automático Intra-Semanal (Flexibilidad de 30 hs sin trámites)
+Permite gestionar la flexibilidad horaria dentro de los días hábiles ordinarios sin necesidad de cargar solicitudes ni pedir autorizaciones previas en el sistema:
+- **Casos de Uso Habituales:**
   - Salir 1 hora antes de lunes a jueves (4 hs adeudadas) y devolverlas completas quedándose 4 horas más el viernes.
-  - Salir 1 hora antes 2 días (2 hs adeudadas) y devolverlas juntas en 1 solo día o en dos días (1 hora cada uno).
-- **Control del Sistema:**
-  - El jefe autoriza el compromiso de devolución para esa semana en el sistema.
-  - El sistema no sanciona la salida anticipada y verifica al cierre del día viernes que el total de horas acumuladas en la semana alcance exactamente las **30 horas** (o la carga del turno asignado).
-  - Si el agente no devolvió las horas acordadas al finalizar la semana, el saldo faltante pasa a liquidación como débito horario.
+  - Salir 1 hora antes 2 días (2 hs adeudadas) y devolverlas juntas en 1 solo día o repartidas en dos días (1 hora cada uno).
+- **Cálculo Automático por el Sistema:**
+  - El sistema no penaliza los retiros anticipados ni exige trámites burocráticos.
+  - Al cierre del día viernes, el motor de cálculo verifica la sumatoria de horas acumuladas en la semana:
+    - Si el total alcanza o supera las **30 horas reglamentarias** (o la carga del turno asignado), la semana se computa como **100% cumplida**.
+    - Si al finalizar la semana quedan horas adeudadas no devueltas, únicamente ese saldo faltante neto pasa a liquidación como débito horario.
 
 ---
 
