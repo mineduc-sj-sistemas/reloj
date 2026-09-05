@@ -1,4 +1,4 @@
-﻿# Plan Maestro — Sistema de Control de Asistencia
+# Plan Maestro — Sistema de Control de Asistencia
 ## Ministerio de Educación de San Juan
 
 > **Versión:** 1.0  
@@ -38,204 +38,140 @@ El reloj físico marca el **edificio**, pero el sistema sabe a qué sector perte
 
 ---
 
-## 📅 Fases de Desarrollo
+## 📅 Hoja de Ruta: Sprints por Nivel de Complejidad
+
+El desarrollo se organiza en **sprints de complejidad incremental**. Cada sprint entrega un incremento de software **100% testeable y validable en campo** antes de pasar al siguiente nivel de sofisticación.
+
+```
+[ Sprint 1: Núcleo, Planta Permanente y Sector Único ] ➔ Validación con 1 reloj y personal de planta
+       │
+       ▼
+[ Sprint 2: Multi-Sector e Itinerancia Básica ] ➔ Validación entrada/salida cruzada y auto-match DNI
+       │
+       ▼
+[ Sprint 3: Distribución Biométrica Autorizada y Clave ] ➔ Rostros a técnicos/choferes/porteros de urgencia
+       │
+       ▼
+[ Sprint 4: Análisis e Integración de Porteros ] ➔ Análisis de francos, rotaciones y turnos escolares
+       │
+       ▼
+[ Sprint 5: Análisis e Integración de Contratados ] ➔ Cargas horarias especiales y vencimientos
+       │
+       ▼
+[ Sprint 6: Analítica Demográfica y APIs Externas ] ➔ Proyección jubilatoria, mapa de ausentismo y RENAPER
+```
 
 ---
 
-### FASE 1 — Infraestructura y Base de Datos (MVP Core)
+### SPRINT 1 — Núcleo, Planta Permanente y Sector Único (MVP Base)
 
-**Objetivo:** Migraciones, modelos, seeders de referencia, autenticación.
+**Objetivo:** Lograr el ciclo completo de control de asistencia para un único sector (ej. Depósito Central), con un solo reloj físico ZKTeco MB20-VL y personal de **Planta Permanente**.
 
-#### Migraciones (orden de dependencias)
+#### 1.1 Base de Datos y Modelos
+- `edificios` — id, nombre, direccion, lat, lng
+- `areas` — id, edificio_id, nombre
+- `sectores` — id, area_id, nombre
+- `empleados` — id, nombre, apellido, dni, legajo, pin_reloj (string, nullable, unique), sexo (string, nullable), fecha_nacimiento (date, nullable), tipo_contrato (planta_permanente), activo, foto
+- `turnos` — id, nombre, hora_inicio, hora_fin, horas_diarias, horas_semanales, es_plantilla (boolean, default true)
+- `asignaciones_laborales` — id, empleado_id, sector_id, turno_id, dias_semana (JSON), fecha_desde, fecha_hasta (nullable), horario_personalizado_inicio (nullable), horario_personalizado_fin (nullable), justificacion_cambio (nullable), activa
+- `excepciones_turno` — id, empleado_id, fecha, hora_inicio, hora_fin, justificacion, aprobado_por (user_id)
+- `dispositivos` — id, serie, ip, alias, sector_id (nullable), modelo, fabricante, protocolo (adms|sdk), activo, ultimo_heartbeat (timestamp, nullable)
+- `marcaciones_brutas` — id, empleado_id (nullable), pin_marcado, dispositivo_id, marcado_en (timestamp), direccion (entrada|salida|desconocida), sincronizado
+- `jornadas_calculadas` — id, empleado_id, fecha, entrada_en, salida_en, dispositivo_entrada_id, dispositivo_salida_id, es_itinerante (default false), horas_trabajadas, estado (presente|ausente|tardanza_permitida|tardanza_intolerable|licencia|feriado|justificado)
+- `configuraciones` — tolerancias de tardanza (minutos), tolerancia intolerable
+- `notificaciones` — alertas del sistema
 
-1. `edificios` — id, nombre, direccion, lat, lng
-2. `areas` — id, edificio_id, nombre
-3. `sectores` — id, area_id, nombre
-4. `empleados` — id, nombre, apellido, dni, legajo, tipo_contrato (planta|contratado|maestranza), activo, foto
-5. `turnos` — id, nombre, hora_inicio, hora_fin, horas_diarias (6|7|8), horas_semanales (20|30)
-6. `asignaciones_laborales` — id, empleado_id, sector_id, turno_id, dias_semana (JSON), fecha_desde, fecha_hasta (nullable), activa
-7. `excepciones_turno` — id, empleado_id, fecha, hora_inicio, hora_fin, justificacion, aprobado_por (user_id)
-8. `licencias` — id, empleado_id, tipo (vacaciones|enfermedad|cambio_tarea|contingencia|otra), fecha_desde, fecha_hasta, justificacion, estado (pendiente|aprobada|rechazada), aprobado_por
-9. `dispositivos` — id, serie, ip, alias, sector_id (nullable), modelo, fabricante, protocolo (adms|sdk), activo
-10. `marcaciones_brutas` — id, empleado_id, dispositivo_id, marcado_en (timestamp), direccion (entrada|salida|desconocida), sincronizado
-11. `jornadas_calculadas` — id, empleado_id, fecha, entrada_en, salida_en, horas_trabajadas, estado (presente|ausente|tardanza_permitida|tardanza_intolerable|licencia|feriado|justificado)
-12. `configuraciones` — id, clave, valor, descripcion (ej: tolerancia_tardanza_minutos, tolerancia_tardanza_intolerable_minutos)
-13. `feriados` — id, fecha, nombre, tipo (nacional|provincial)
-14. `notificaciones` — id, user_id, tipo, mensaje, leida, datos (JSON), created_at
-
-#### Modelos Eloquent
-- `Edificio`, `Area`, `Sector`
-- `Empleado` (con relaciones: asignaciones, marcaciones, jornadas, licencias)
-- `Turno`, `AsignacionLaboral`, `ExcepcionTurno`
-- `Licencia`
-- `Dispositivo`
-- `MarcacionBruta`, `JornadaCalculada`
-- `Configuracion` (helper estático `Configuracion::get('clave')`)
-- `Feriado`
-- `Notificacion`
-
-#### Autenticación
-- Laravel Breeze (API mode) + Sanctum
-- Spatie Laravel-Permission para roles (`super_admin`, `jefe`, `administrativo`)
-- Middleware de rol en rutas API
+#### 1.2 Funcionalidad y Pruebas
+- Login y roles (`super_admin`, `jefe`, `administrativo`).
+- Alta de estructura única (1 Edificio ➔ 1 Área ➔ 1 Sector).
+- Alta de empleados de planta permanente con PIN flexible (4 dígitos o DNI).
+- Asignación de turnos estándar o con horario individual justificado (ej. 08:00 a 16:00).
+- Conexión ADMS con ZKTeco: recepción de transacciones `ATTLOG`.
+- **Tablero en vivo del Sector (`/sectores/:id/dashboard`):**
+  - Si el reloj está conectado: presencia en tiempo real, entradas, salidas y tardanzas.
+  - **Modo Preparación (sin reloj asignado):** Permite organizar y consultar la nómina de empleados antes de instalar el equipo físico, mostrando banner informativo ámbar.
+- Cálculo de jornada simple (entrada y salida en el mismo sector) y cálculo de tardanzas.
+- **Criterio de Validación:** Probar con reloj real o simulador en un sector con empleados de planta permanente, verificando el cálculo de horas.
 
 ---
 
-### FASE 2 — Vista de Relojes (Dispositivos)
+### SPRINT 2 — Multi-Sector, Personal Itinerante y Auto-Match DNI
 
-**Ruta Vue:** `/relojes`
+**Objetivo:** Soportar múltiples dependencias (ej. Depósito Central y Centro Cívico), empleados que entran en un lugar y salen en otro, y trazabilidad total si se cambian los PINs en los relojes.
 
-#### 2.1 Dashboard de Relojes
-- Tarjetas por dispositivo: alias, sector asignado, estado (online/offline), última comunicación, IP, modelo
-- Indicador de tasa de marcaciones del día
-- Botón "Ver detalles" → panel lateral o modal
+#### 2.1 Base de Datos Adicional
+- `historial_pins_reloj` — id, empleado_id, pin_anterior, pin_nuevo, origen (`auto_match_dni`|`manual`|`reloj_adms`), cambiado_en, motivo
 
-#### 2.2 Alta / Edición de Reloj
-- Campos: Número de Serie, IP, Alias, Edificio → Área → Sector (cascada), Modelo, Protocolo
-- Validación: serie única, IP válida
-- MVP: soporte ZKTeco ADMS (MB20-VL); estructura para agregar drivers de otros modelos
+#### 2.2 Algoritmo de Jornada Multi-Sede (`JornadaService`)
+- Consolidación por `(empleado_id, fecha)` unificando marcaciones de distintos dispositivos:
+  - Primera marca del día = Entrada (`dispositivo_entrada_id`).
+  - Última marca del día = Salida (`dispositivo_salida_id`).
+  - Si los edificios difieren: marca `es_itinerante = true`. Las horas se acreditan al sector laboral de origen del agente.
+- En el dashboard del sector de origen: figura `Presente (Salida en Sede Central)` sin registrar falta de salida.
+- En el dashboard del edificio visitado: figura en solapa secundaria de personal en comisión.
 
-#### 2.3 Vista Mapa (Leaflet.js)
-- Marcador por edificio (lat/lng desde `edificios`)
-- Color del marcador: verde (todos online), naranja (alguno offline), rojo (todos offline)
-- Popup: nombre del edificio, lista de relojes con estado, tasa de presencia del día
-
-#### 2.4 Sistema de Alertas Offline
-- Backend: `CheckDevicesStatusJob` (schedule cada 5 min)
-  - Si un reloj no hace heartbeat en >10 min → crea notificación tipo `dispositivo_offline`
-- Frontend: campanita con badge de no leídas, polling cada 30s a `/api/notificaciones`
-- Toast al recibir nueva notificación offline
-
-#### 2.5 Revisión del Heartbeat ADMS
-- Intervalo actual: ~30s (configurable desde el reloj físico)
-- Recomendación MVP con pocos relojes: mantener 30s
-- Si escalan a >10 relojes: subir a 60s desde el panel del dispositivo o via comando ADMS `SETPARA`
+#### 2.3 Auto-Match Inteligente de PIN a DNI
+- Si en un reloj se cambia un ID de 4 dígitos a DNI: al recibir la marcación, el sistema busca coincidencia en `empleados.dni`.
+- Auto-asocia la marca a la persona, actualiza `pin_reloj = DNI` y guarda el cambio en `historial_pins_reloj`. Responde a: *"¿A qué ID pertenecía antes?"*.
+- **Criterio de Validación:** Fichar entrada en reloj A, salida en reloj B, y probar cambio de PIN en el reloj comprobando auto-detección e historial.
 
 ---
 
-### FASE 3 — Vista de Usuarios (Empleados)
+### SPRINT 3 — Distribución Biométrica Autorizada y Marcación por Clave
 
-**Ruta Vue:** `/usuarios`
+**Objetivo:** Permitir que personal móvil (choferes, técnicos, porteros en comisión de urgencia) pueda fichar en relojes donde nunca estuvieron físicamente, sin saturar la memoria de los equipos.
 
-#### 3.1 Lista de Empleados
-- Tabla con: foto, nombre, DNI, legajo, tipo contrato, sector actual, turno actual, estado (activo/inactivo)
-- Filtros: edificio, área, sector, tipo contrato, activo
-- Búsqueda por nombre/DNI/legajo
-- Badge naranja si el empleado tiene datos incompletos (sin turno, sin sector)
-- Exportar Excel / PDF
+#### 3.1 Base de Datos Adicional
+- `empleados`: campos adicionales `permite_marcar_por_clave` (boolean, default false), `password_reloj` (nullable), `alcance_biometrico` (enum: `sector_habitual`|`sector_mas_central`|`red_global`|`comision_temporal`)
+- `comisiones_biometricas` — id, empleado_id, sector_destino_id, dispositivo_destino_id, fecha_desde, fecha_hasta, motivo, activo
+- `biometria_templates` — id, empleado_id, tipo (rostro|huella), version_algoritmo, template_data, synced_at
 
-#### 3.2 Detección de Empleados Nuevos
-- Al recibir una marcación de un PIN desconocido vía ADMS → crear empleado con `activo=false` y datos mínimos
-- Notificación interna: "Nuevo empleado sin datos — PIN: XXXX"
-- La vista de lista muestra un filtro/badge "Pendientes de completar"
-
-#### 3.3 Perfil / Alta / Edición de Empleado
-- Datos personales: nombre, apellido, DNI, legajo, foto, tipo contrato, fecha ingreso
-- **Asignaciones laborales** (historial): sector, turno, días activos, fecha desde/hasta
-  - Puede tener varias asignaciones históricas; solo una activa a la vez
-  - Puede cambiar de sector/turno con justificación
-- **Excepciones de turno**: días puntuales con horario diferente
-- **Historial de marcaciones** (últimos 30 días): tabla con entrada/salida/horas/estado
-
-#### 3.4 Gestión de Turnos
-**Ruta:** `/turnos`
-- ABM de turnos: nombre, hora inicio, hora fin, horas diarias, horas semanales
-- Turno estándar A: 07:00–15:00 / 8h / 30h  
-- Turno estándar B: 13:00–21:00 / 8h / 30h
-- Turnos modificados: se crean con aprobación del jefe
+#### 3.2 Sincronización Biométrica Push (ADMS)
+- Cuando el empleado se enrola en su sede de origen, el servidor almacena su template (`POST /iclock/cdata?table=BIODATA`).
+- **Distribución Selectiva y de Urgencia:**
+  - **Choferes / Inspectores:** Con `alcance_biometrico = red_global`, sus templates se encolan para todos los relojes ministeriales.
+  - **Técnicos de Sistemas:** Templates enviados al Depósito y Centro Cívico.
+  - **Porteros de Urgencia / Reemplazos:** Al asignar una comisión temporal a una escuela, el servidor empuja su template al reloj de dicha escuela (`DATA UPDATE BIODATA`). Al expirar la fecha, se encola comando de remoción para liberar memoria física del MB20-VL.
+- **Marcación por Clave (Password):**
+  - Para casos donde no hay biometría previa ni tiempo de sincronizar, se habilita marcación con PIN + Contraseña numérica en el reloj.
+- **Criterio de Validación:** Enrolar usuario en un reloj, autorizar comisión a otro reloj, verificar descarga automática del rostro y fichada exitosa sin enrolamiento presencial.
 
 ---
 
-### FASE 4 — Asistencia y Jornadas
+### SPRINT 4 — Análisis y Gestión de Porteros (Maestranza Escolar)
 
-**Ruta Vue:** `/asistencia`
+**Objetivo:** Incorporar la lógica y particularidades del personal de portería tras analizar sus requerimientos con las autoridades.
 
-#### 4.1 Dashboard Diario (Live)
-- Listado de todos los empleados del día actual con estado en tiempo real
-- Estados: `Presente`, `Ausente`, `Tardanza`, `En Licencia`, `Feriado`
-- Hora de entrada registrada, hora estimada de salida
-- Filtro por edificio/área/sector
-- Actualización cada 3s (polling existente en `/api/live-data`)
-
-#### 4.2 Cálculo de Jornada
-- Lógica en `JornadaService`:
-  - Tomar **primera marcación** del día como entrada
-  - Tomar **última marcación** del día como salida (a confirmar con usuarios)
-  - Calcular `horas_trabajadas = salida - entrada`
-  - Comparar con turno del empleado ese día (con excepciones si aplica)
-  - Determinar estado: presente, tardanza permitida, tardanza intolerable
-  - Considerar licencias activas antes de marcar ausente
-  - Considerar feriados del calendario
-
-#### 4.3 Gestión de Tardanza
-- Configuración global (tabla `configuraciones`):
-  - `tolerancia_tardanza_minutos`: ej. 10 min → tardanza permitida
-  - `tolerancia_tardanza_intolerable_minutos`: ej. 30 min → tardanza intolerable
-- Mostrar en dashboard con colores: amarillo = permitida, rojo = intolerable
-
-#### 4.4 Licencias
-**Ruta:** `/licencias`
-- ABM de licencias por empleado
-- Tipos: vacaciones, enfermedad, cambio de tarea, contingencia climática, otra
-- Estado: pendiente → aprobada / rechazada (por `jefe`)
-- Al aprobar: afecta el cálculo de jornada para esas fechas
-- Contingencia climática: redondea la jornada al 100% (horas_trabajadas = horas_turno)
-
-#### 4.5 Feriados
-**Ruta:** `/configuracion/feriados`
-- ABM de feriados: fecha, nombre, tipo (nacional/provincial)
-- Importación anual (CSV o manual)
+#### 4.1 Relevamiento y Modelado
+- Análisis de regímenes de trabajo: guardias, turnos cortados, francos rotativos, eventos escolares extraordinarios.
+- Habilitación del perfil `portero` en la interfaz.
+- Esquema de reemplazos y asignaciones de emergencia inter-escuelas integrado con el módulo de biometría del Sprint 3.
+- **Criterio de Validación:** Configurar porteros con turnos específicos, reemplazos de urgencia y control de jornada escolar.
 
 ---
 
-### FASE 5 — Reportes y Exportación
+### SPRINT 5 — Análisis y Gestión de Personal Contratado
 
-**Ruta Vue:** `/reportes`
+**Objetivo:** Incorporar y controlar el cumplimiento de contratos de locación y servicios no docentes.
 
-#### 5.1 Reporte de Asistencia Mensual
-- Por empleado o por sector
-- Columnas: día, entrada, salida, horas trabajadas, estado, observaciones
-- Filtros: mes, empleado, edificio/área/sector, tipo contrato
-- Exportar a **Excel** (Laravel Excel / PhpSpreadsheet)
-- Exportar a **PDF** (DomPDF / Laravel Snappy)
-
-#### 5.2 Reporte de Tardanzas
-- Listado de empleados con tardanzas en un período
-- Clasificado por: permitidas vs intolerables
-
-#### 5.3 Reporte de Ausentismo
-- Empleados con ausencias injustificadas en un período
-
-#### 5.4 Reporte de Dispositivos
-- Historial de conectividad por reloj
-- Tasa de disponibilidad
+#### 5.1 Relevamiento y Modelado
+- Habilitación del perfil `contratado`.
+- Control de carga horaria reducida o diferenciada (20h, 30h semanales).
+- Gestión de fechas de vencimiento de contrato con alertas preventivas para RRHH.
+- Cómputo de horas mensuales acumuladas para certificación de facturación/servicio.
+- **Criterio de Validación:** Simulación de contratos de 20h y 30h con alertas de cumplimiento mensual y vencimientos.
 
 ---
 
-### FASE 6 — Infraestructura de Soporte
+### SPRINT 6 — Analítica Demográfica, Salud Laboral y APIs Externas
 
-#### 6.1 Sistema Multi-Driver de Dispositivos
-- Interfaz/contrato `DeviceDriver`:
-  - `sendCommand(Dispositivo $device, string $command, array $params): bool`
-  - `syncEmployees(Dispositivo $device, Collection $empleados): bool`
-  - `getStatus(Dispositivo $device): DeviceStatus`
-- Implementaciones:
-  - `AdmsDriver` (ZKTeco MB20-VL — ya implementado)
-  - `SdkDriver` (placeholder para futuros modelos)
-- Registro en `DeviceDriverFactory` por modelo/protocolo
+**Objetivo:** Inteligencia de datos, reportes estratégicos e interoperabilidad con el gobierno provincial.
 
-#### 6.2 Jobs y Schedule
-| Job | Frecuencia | Propósito |
-|-----|-----------|-----------|
-| `CheckDevicesStatusJob` | Cada 5 min | Detecta relojes offline → notificación |
-| `CalculateJornadasJob` | Diario 23:59 | Cierra y calcula jornadas del día |
-| `SyncFeriadosJob` | Anual (1 ene) | Importar feriados del año siguiente |
-
-#### 6.3 Notificaciones In-App
-- Modelo `Notificacion` con tipos: `dispositivo_offline`, `empleado_nuevo`, `licencia_pendiente`, `turno_modificado`
-- Endpoint: `GET /api/notificaciones?no_leidas=true`
-- Frontend: campanita con badge, dropdown de notificaciones, marcar como leída
-- Toast automático para nuevas notificaciones críticas
+#### 6.1 Módulos Avanzados
+- **Alerta Demográfica y Proyección de Jubilaciones:** Reportes cruzando `sexo` y `fecha_nacimiento` (edad dinámica) para proyectar jubilaciones a 6, 12 y 24 meses.
+- **Salud Laboral y Ausentismo:** Indexación de licencias médicas, tareas pasivas, ART y mapas de calor estacionales por sector.
+- **Interoperabilidad:** Implementación de `PersonaDataProviderInterface` para auto-completar legajos desde APIs provinciales (Ciudadano Digital / RENAPER).
+- Exportación formal de reportes a PDF y Excel para liquidaciones.
 
 ---
 
@@ -250,10 +186,11 @@ El reloj físico marca el **edificio**, pero el sistema sabe a qué sector perte
 /relojes/nuevo            → Alta de reloj
 /relojes/:id              → Detalle / edición de reloj
 /relojes/mapa             → Mapa de ubicaciones (Leaflet)
+/sectores/:id/dashboard   → Dashboard específico del sector (con o sin reloj)
 /usuarios                 → Lista de empleados
 /usuarios/nuevo           → Alta de empleado
 /usuarios/:id             → Perfil + asignaciones
-/turnos                   → ABM de turnos
+/turnos                   → ABM de plantillas de turnos y personalizaciones
 /licencias                → Gestión de licencias
 /configuracion            → Configuración general
 /configuracion/feriados   → ABM de feriados
@@ -265,38 +202,60 @@ El reloj físico marca el **edificio**, pero el sistema sabe a qué sector perte
 ## 🎨 Design System
 
 - **Skill activo:** `.agents/skills/design/SKILL.md`
-- Paleta estricta: naranja `#FE8204`, rojo `#E43C2F`, amarillo `#FADC3C`, fondo blanco, texto negro
-- Thead tablas: `bg-brand-orange text-white uppercase font-black text-xs`
-- Botón primario: `bg-brand-orange text-white`
-- Botón peligro: `bg-brand-red text-white`
-- Sin colores genéricos grises como primarios; WCAG AA obligatorio
+- Paleta institucional estricta: naranja `#FE8204`, rojo `#E43C2F`, amarillo `#FADC3C`, fondo blanco, texto negro.
+- Accesibilidad WCAG AA en contrastes y tablas.
 
 ---
 
-## ✅ Criterios de Aceptación MVP
+## 📚 Documentación Continua y Regla de Sprint
 
-- [ ] Login funcional con 3 roles
-- [ ] Alta de edificios, áreas, sectores
-- [ ] Alta de empleados planta permanente con asignación a sector y turno
-- [ ] El reloj ZKTeco envía marcaciones y se almacenan correctamente
-- [ ] Dashboard live muestra estado de empleados en tiempo real
-- [ ] Cálculo de jornada diaria (entrada/salida/horas)
-- [ ] Estados de asistencia: presente, ausente, tardanza, licencia, feriado
-- [ ] Vista de relojes con estado online/offline
-- [ ] Alta de reloj asociada a sector
-- [ ] Alertas in-app cuando un reloj se desconecta
-- [ ] Reporte mensual exportable a Excel
-- [ ] Mapa con marcadores de edificios
+- **Skill activo:** `.agents/skills/documentacion/SKILL.md`
+- **Regla obligatoria de Sprint:** Al concluir cada fase, sprint o cambio arquitectónico, es mandatorio actualizar:
+  1. `doc/arquitectura.md` con las decisiones técnicas y diagramas adoptados.
+  2. `doc/procedimientos.md` con los pasos operativos de configuración y despliegue.
+  3. `doc/manual_de_usuario.md` con las instrucciones funcionales para los roles de usuario.
+  4. Los criterios de aceptación cumplidos en este plan maestro.
 
-## ✅ Criterios de Aceptación Post-MVP
+---
 
-- [ ] Exportación PDF
-- [ ] Gestión de licencias con flujo de aprobación
-- [ ] Excepciones de turno por día
-- [ ] Soporte multi-driver para otros modelos ZKTeco
-- [ ] Tipos de contrato: contratado y maestranza
-- [ ] Feriados nacionales/provinciales con importación
-- [ ] Reportes de tardanza y ausentismo
+### ✅ Criterios de Aceptación por Nivel de Complejidad
+ 
+### Sprint 1 — Núcleo, Planta Permanente y Sector Único
+- [ ] Login funcional con roles (`super_admin`, `jefe`, `administrativo`).
+- [ ] Estructura base (Edificio ➔ Área ➔ Sector) cargada.
+- [ ] Alta de empleados de planta permanente con `pin_reloj` (flexible para 4 dígitos o DNI), `sexo` y `fecha_nacimiento` nullable.
+- [ ] Plantillas de turnos y asignaciones con horario personalizado justificado.
+- [ ] Conexión ADMS con ZKTeco MB20-VL (recepción y guardado de marcaciones en `marcaciones_brutas`).
+- [ ] Tablero del sector en vivo (`/sectores/:id/dashboard`) con telemetría online y con banner preventivo en Modo Preparación.
+- [ ] Cálculo de jornada simple (entrada/salida en el mismo sector) y tolerancias de tardanza.
+ 
+### Sprint 2 — Multi-Sector e Itinerancia Básica
+- [ ] Consolidación multi-sede en `JornadaService` (primera entrada y última salida sin importar el reloj).
+- [ ] Atribución de horas al sector formal del empleado con flag `es_itinerante = true`.
+- [ ] Tableros de origen y destino reflejan adecuadamente la presencia sin registrar faltas de salida.
+- [ ] Auto-match inteligente al cambiar PIN a DNI en el reloj y registro de auditoría en `historial_pins_reloj`.
+ 
+### Sprint 3 — Distribución Biométrica y Clave
+- [ ] Almacenamiento centralizado de plantillas biométricas (`biometria_templates`).
+- [ ] Distribución selectiva de rostros según `alcance_biometrico` (choferes, técnicos, comisiones).
+- [ ] Asignación temporal de comisión para porteros de urgencia y despacho automático de biometría al reloj destino.
+- [ ] Soporte de marcación por contraseña/clave en el ZKTeco para usuarios autorizados (`permite_marcar_por_clave`).
+ 
+### Sprint 4 — Porteros (Maestranza Escolar)
+- [ ] Relevamiento y formalización de turnos escolares, guardias y rotaciones.
+- [ ] Habilitación visual y operativa del perfil `portero`.
+- [ ] Flujo validado de suplencias y coberturas de emergencia entre escuelas.
+ 
+### Sprint 5 — Contratados
+- [ ] Relevamiento y parametrización de contratos administrativos y de servicio (20h/30h semanales).
+- [ ] Habilitación visual y operativa del perfil `contratado`.
+- [ ] Alertas preventivas de vencimiento de contrato y cómputo de horas mensuales acumuladas.
+ 
+### Sprint 6 — Analítica Avanzada y Conectividad
+- [ ] Proyección automática de jubilaciones por rango etario y género.
+- [ ] Mapa de calor de licencias médicas, ART y tareas pasivas.
+- [ ] Interfaz de integración con APIs externas (Ciudadano Digital / RENAPER).
+- [ ] Exportación de reportes a PDF y Excel.
 
 ---
 
@@ -306,10 +265,12 @@ El reloj físico marca el **edificio**, pero el sistema sabe a qué sector perte
 |---------|-------------|
 | `.agents/workflows/promt.md` | Requerimientos originales del usuario |
 | `.agents/workflows/detalles.md` | Respuestas a preguntas de análisis |
+| `.agents/workflows/plan_maestro.md` | Plan maestro vivo del proyecto |
 | `.agents/skills/design/SKILL.md` | Design system institucional |
-| `.agents/skills/laravel-best-practices/SKILL.md` | Patrones Laravel |
-| `.agents/skills/vue-best-practices/SKILL.md` | Patrones Vue 3 |
-| `.agents/skills/laravel-security/SKILL.md` | Seguridad backend |
+| `.agents/skills/documentacion/SKILL.md` | Estándares de documentación técnica y funcional |
+| `doc/arquitectura.md` | Documentación técnica y decisiones de arquitectura |
+| `doc/procedimientos.md` | Procedimientos operativos y configuración de equipos |
+| `doc/manual_de_usuario.md` | Manual de usuario para operadores y jefatura |
 
 ---
 
