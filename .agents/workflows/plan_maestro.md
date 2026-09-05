@@ -125,6 +125,7 @@ El desarrollo se organiza en **sprints de complejidad incremental**. Cada sprint
 - **Banco de Horas Compensatorias (EXCLUSIVO para Operativos Especiales):**
   - **Regla estricta:** El banco de horas NO se alimenta por permanencia voluntaria de ningún empleado fuera de hora. No se permite acumular horas en una semana para restar en otra por cuenta propia.
   - **Único origen válido:** Resoluciones o Memos de la autoridad ministerial para **Operativos Especiales** (fines de semana, feriados o refuerzos masivos). Solo esas horas autorizadas ingresan al `banco_horas_compensatorias`.
+  - > ⚠️ **Pendiente de definición con autoridades:** Definir la mecánica de consumo/débito de este saldo: si se permite compensar automáticamente horas ordinarias faltantes al cierre semanal, o si su uso queda restringido exclusivamente al canje por días francos completos o liquidación económica extraordinaria.
   
 - **Balance Automático Intra-Semanal (Carga Fija de 30/35/40 hs sin burocracia):**
   - **Sin autorización previa requerida:** El empleado tiene la flexibilidad de compensar sus horas dentro de la misma semana de trabajo (ej. salir 1 hora antes de lunes a jueves y devolverlas quedándose 4 horas más el viernes; o salir 1 hora antes 2 días y devolverlas juntas en 1 día o repartidas en 2).
