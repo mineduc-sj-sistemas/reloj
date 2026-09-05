@@ -29,7 +29,7 @@ const {
 </script>
 
 <template>
-  <div class="min-h-screen bg-slate-900 text-slate-100 flex flex-col">
+  <div class="min-h-screen bg-white text-black flex flex-col">
     <!-- Navbar -->
     <Navbar
       :is-simulating="isSimulating"
@@ -52,22 +52,22 @@ const {
         <div
           v-if="notification"
           :class="[
-            'px-4 py-3 rounded-lg text-sm flex items-center justify-between shadow border',
+            'px-4 py-3 rounded-lg text-sm flex items-center justify-between shadow-sm border',
             notification.type === 'success'
-              ? 'bg-emerald-900/50 border-emerald-500/50 text-emerald-200'
-              : 'bg-rose-900/50 border-rose-500/50 text-rose-200'
+              ? 'bg-white border-brand-orange text-black font-semibold'
+              : 'bg-brand-red text-white font-bold border-transparent'
           ]"
         >
           <div class="flex items-center gap-2">
             <component
               :is="notification.type === 'success' ? CheckCircle2 : AlertCircle"
-              class="w-5 h-5"
+              :class="['w-5 h-5', notification.type === 'success' ? 'text-brand-orange' : 'text-white']"
             />
             <span>{{ notification.message }}</span>
           </div>
           <button
             @click="clearNotification"
-            class="text-xs opacity-75 hover:opacity-100 cursor-pointer"
+            class="text-xs font-bold opacity-80 hover:opacity-100 cursor-pointer px-1.5 py-0.5"
           >
             ✕
           </button>

@@ -44,47 +44,47 @@ function handleSubmit() {
   <Teleport to="body">
     <div
       v-if="device"
-      class="fixed inset-0 bg-black/70 backdrop-blur-xs z-50 flex items-center justify-center p-4"
+      class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4"
     >
-      <div class="bg-slate-800 border border-slate-700 rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4">
-        <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+      <div class="bg-white border border-slate-200 rounded-xl max-w-md w-full p-6 shadow-xl space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
           <div class="flex items-center gap-2">
-            <Settings class="w-5 h-5 text-indigo-400" />
-            <h3 class="font-bold text-white text-base">Asignar Lector a Dependencia</h3>
+            <Settings class="w-5 h-5 text-brand-orange" />
+            <h3 class="font-bold text-black text-base">Asignar Lector a Dependencia</h3>
           </div>
           <button
             @click="emit('close')"
-            class="text-slate-400 hover:text-white p-1 rounded-md transition cursor-pointer"
+            class="text-black/60 hover:text-black p-1 rounded-md transition cursor-pointer"
           >
             <X class="w-5 h-5" />
           </button>
         </div>
 
-        <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-700/60 text-xs space-y-1 font-mono">
-          <p class="text-slate-400">Número de Serie: <span class="text-indigo-300 font-bold">{{ device.sn }}</span></p>
-          <p class="text-slate-400">Dirección IP: <span class="text-slate-200">{{ device.ip_address || 'Desconocida' }}</span></p>
+        <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs space-y-1 font-mono text-black">
+          <p class="text-black/80 font-semibold">Número de Serie: <span class="text-brand-orange font-bold">{{ device.sn }}</span></p>
+          <p class="text-black/80">Dirección IP: <span class="font-bold text-black">{{ device.ip_address || 'Desconocida' }}</span></p>
         </div>
 
         <form @submit.prevent="handleSubmit" class="space-y-3.5">
           <div>
-            <label class="block text-xs text-slate-300 font-medium mb-1">
+            <label class="block text-xs text-black font-bold mb-1">
               Nombre / Alias Identificador del Reloj
             </label>
             <input
               v-model="alias"
               type="text"
               placeholder="Ej. Reloj Entrada Principal"
-              class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+              class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-black placeholder:text-slate-400 font-medium focus:outline-none focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange"
             />
           </div>
 
           <div>
-            <label class="block text-xs text-slate-300 font-medium mb-1">
+            <label class="block text-xs text-black font-bold mb-1">
               Dependencia / Escuela Asignada
             </label>
             <select
               v-model="departmentId"
-              class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+              class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-black font-medium focus:outline-none focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange cursor-pointer"
             >
               <option :value="null">-- Seleccionar Dependencia --</option>
               <option
@@ -98,29 +98,29 @@ function handleSubmit() {
           </div>
 
           <div>
-            <label class="block text-xs text-slate-300 font-medium mb-1">
+            <label class="block text-xs text-black font-bold mb-1">
               Ubicación Física Específica
             </label>
             <input
               v-model="locationDescription"
               type="text"
               placeholder="Ej. Hall central junto a dirección"
-              class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+              class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-black placeholder:text-slate-400 font-medium focus:outline-none focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange"
             />
           </div>
 
-          <div class="pt-3 border-t border-slate-700 flex justify-end gap-2">
+          <div class="pt-3 border-t border-slate-200 flex justify-end gap-2">
             <button
               type="button"
               @click="emit('close')"
-              class="bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs px-4 py-2 rounded-lg font-medium transition cursor-pointer"
+              class="bg-white border border-slate-300 text-black hover:bg-slate-50 text-xs px-4 py-2 rounded-lg font-bold transition cursor-pointer"
             >
               Cancelar
             </button>
             <button
               type="submit"
               :disabled="isSubmitting"
-              class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-4 py-2 rounded-lg font-semibold shadow transition cursor-pointer disabled:opacity-50"
+              class="bg-brand-orange hover:bg-brand-orange/95 text-white text-xs px-4 py-2 rounded-lg font-bold shadow-sm transition cursor-pointer disabled:opacity-50"
             >
               Guardar Asignación
             </button>

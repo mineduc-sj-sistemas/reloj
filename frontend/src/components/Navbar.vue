@@ -13,49 +13,49 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50">
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-xs">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
       <div class="flex items-center space-x-3">
         <img
           src="/logoMinisterio.png"
-          alt="Ministerio de Educación"
-          class="h-10 w-auto object-contain bg-white/95 p-1 rounded-md shadow-sm border border-slate-600 hidden sm:block"
+          alt="Ministerio de Educación de San Juan"
+          class="h-11 w-auto object-contain border border-slate-200 p-1 rounded-md bg-white shadow-xs hidden sm:block"
         />
-        <div class="p-2 bg-indigo-600 rounded-lg text-white shadow-lg">
+        <div class="p-2 bg-brand-orange rounded-lg text-white shadow-sm">
           <Fingerprint class="w-6 h-6" />
         </div>
         <div>
-          <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+          <h1 class="text-lg font-black tracking-tight text-black flex items-center gap-2">
             ZKTeco ADMS Server
-            <span class="text-xs font-semibold px-2 py-0.5 bg-emerald-950 text-emerald-400 border border-emerald-800 rounded-full flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-emerald-400 live-dot"></span> EN VIVO
+            <span class="text-xs font-bold px-2 py-0.5 bg-white text-brand-orange border border-brand-orange rounded-full flex items-center gap-1.5 shadow-xs">
+              <span class="w-2 h-2 rounded-full bg-brand-orange live-dot"></span> EN VIVO
             </span>
           </h1>
-          <p class="text-xs text-slate-400">Gestión Multidependencia para ZKTeco MB20-VL & SQLite (Vue 3 + TS)</p>
+          <p class="text-xs text-black/70 font-medium">Ministerio de Educación · Gestión Multidependencia ZKTeco MB20-VL</p>
         </div>
       </div>
 
       <div class="flex items-center gap-2.5">
         <button
           @click="emit('openDepartment')"
-          class="bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold px-3 py-2 rounded-md shadow flex items-center gap-1.5 transition cursor-pointer"
+          class="bg-white border border-brand-orange text-black hover:bg-brand-orange/5 px-3 py-2 rounded-lg transition-colors text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer"
         >
-          <Building2 class="w-4 h-4 text-indigo-400" />
+          <Building2 class="w-4 h-4 text-brand-orange" />
           <span>+ Dependencia</span>
         </button>
 
         <button
           @click="emit('openEmployee')"
-          class="bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold px-3 py-2 rounded-md shadow flex items-center gap-1.5 transition cursor-pointer"
+          class="bg-white border border-brand-orange text-black hover:bg-brand-orange/5 px-3 py-2 rounded-lg transition-colors text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer"
         >
-          <UserPlus class="w-4 h-4 text-purple-400" />
+          <UserPlus class="w-4 h-4 text-brand-orange" />
           <span>+ Agente</span>
         </button>
 
         <button
           @click="emit('simulatePunch')"
           :disabled="isSimulating"
-          class="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-semibold px-3.5 py-2 rounded-md shadow flex items-center gap-1.5 transition cursor-pointer"
+          class="bg-brand-orange hover:bg-brand-orange/95 disabled:opacity-50 text-white font-bold px-3.5 py-2 rounded-lg transition-colors border border-transparent shadow-sm text-xs flex items-center gap-1.5 cursor-pointer"
         >
           <Zap class="w-4 h-4" />
           <span>{{ isSimulating ? 'Simulando...' : 'Simular Fichada' }}</span>

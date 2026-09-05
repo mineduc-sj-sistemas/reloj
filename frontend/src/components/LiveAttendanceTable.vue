@@ -8,49 +8,49 @@ defineProps<{
 </script>
 
 <template>
-  <div class="bg-slate-800/90 border border-slate-700/80 rounded-xl shadow-lg overflow-hidden">
-    <div class="px-4 py-3.5 border-b border-slate-700/80 flex items-center justify-between">
+  <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+    <div class="px-4 py-3.5 border-b border-slate-200 bg-white flex items-center justify-between">
       <div class="flex items-center gap-2">
-        <History class="w-5 h-5 text-indigo-400" />
-        <h2 class="font-semibold text-white text-sm">Fichadas en Vivo (Últimas Registradas)</h2>
+        <History class="w-5 h-5 text-brand-orange" />
+        <h2 class="font-bold text-black text-sm">Fichadas en Vivo (Últimas Registradas)</h2>
       </div>
-      <span class="text-xs text-slate-400">
+      <span class="text-xs font-semibold text-black/60">
         Actualización cada 3 segundos
       </span>
     </div>
 
     <div class="overflow-x-auto">
-      <table class="w-full text-left text-xs text-slate-300">
-        <thead class="bg-slate-900/60 text-[11px] text-slate-400 uppercase tracking-wider border-b border-slate-700/60">
+      <table class="w-full text-left text-xs text-black">
+        <thead class="bg-brand-orange text-white uppercase font-black text-xs tracking-wider">
           <tr>
-            <th class="py-2.5 px-3">Agente / Empleado</th>
-            <th class="py-2.5 px-3">PIN</th>
-            <th class="py-2.5 px-3">Reloj / Dependencia</th>
-            <th class="py-2.5 px-3">Fecha y Hora</th>
-            <th class="py-2.5 px-3">Estado</th>
-            <th class="py-2.5 px-3">Método</th>
+            <th class="py-3 px-4">Agente / Empleado</th>
+            <th class="py-3 px-4">PIN</th>
+            <th class="py-3 px-4">Reloj / Dependencia</th>
+            <th class="py-3 px-4">Fecha y Hora</th>
+            <th class="py-3 px-4">Estado</th>
+            <th class="py-3 px-4">Método</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-slate-700/40">
+        <tbody class="divide-y divide-slate-100">
           <tr v-if="logs.length === 0">
-            <td colspan="6" class="py-8 text-center text-slate-500">
+            <td colspan="6" class="py-8 text-center text-black/60 font-medium">
               No hay fichadas registradas aún.
             </td>
           </tr>
           <tr
             v-for="log in logs"
             :key="log.id"
-            class="hover:bg-slate-700/30 transition"
+            class="hover:bg-slate-50 transition"
           >
             <!-- Agente -->
-            <td class="py-2.5 px-3 font-semibold text-white">
-              <div class="flex items-center gap-2">
-                <div class="w-7 h-7 rounded-full bg-indigo-600/30 border border-indigo-500/50 flex items-center justify-center text-[11px] font-bold text-indigo-300">
+            <td class="py-2.5 px-4 font-bold text-black">
+              <div class="flex items-center gap-2.5">
+                <div class="w-7 h-7 rounded-full bg-brand-orange/15 border border-brand-orange/40 flex items-center justify-center text-[11px] font-black text-brand-orange">
                   {{ (log.employee_name || 'A').charAt(0).toUpperCase() }}
                 </div>
                 <div>
-                  <p class="text-white">{{ log.employee_name }}</p>
-                  <p v-if="log.employee_department" class="text-[10px] text-slate-400">
+                  <p class="text-black font-bold">{{ log.employee_name }}</p>
+                  <p v-if="log.employee_department" class="text-[10px] text-black/70 font-semibold">
                     {{ log.employee_department }}
                   </p>
                 </div>
@@ -58,36 +58,36 @@ defineProps<{
             </td>
 
             <!-- PIN -->
-            <td class="py-2.5 px-3 font-mono text-indigo-300">
-              <span class="bg-indigo-950 border border-indigo-800 px-2 py-0.5 rounded text-[11px]">
+            <td class="py-2.5 px-4 font-mono font-bold text-black">
+              <span class="bg-slate-100 border border-slate-300 px-2 py-0.5 rounded text-[11px] text-black">
                 #{{ log.user_pin }}
               </span>
             </td>
 
             <!-- Dispositivo / Dependencia -->
-            <td class="py-2.5 px-3">
-              <p class="text-white font-medium">{{ log.device_name }}</p>
-              <span v-if="log.device_department" class="text-[10px] text-amber-300 bg-amber-950/60 border border-amber-800/60 px-1.5 py-0.5 rounded">
+            <td class="py-2.5 px-4">
+              <p class="text-black font-semibold">{{ log.device_name }}</p>
+              <span v-if="log.device_department" class="text-[10px] text-brand-orange font-bold bg-brand-orange/10 border border-brand-orange/30 px-1.5 py-0.5 rounded">
                 {{ log.device_department }}
               </span>
             </td>
 
             <!-- Fecha y Hora -->
-            <td class="py-2.5 px-3 font-mono text-slate-200">
+            <td class="py-2.5 px-4 font-mono text-black font-semibold">
               {{ log.punch_time }}
             </td>
 
             <!-- Estado -->
-            <td class="py-2.5 px-3">
-              <span class="px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-950 text-emerald-400 border border-emerald-800">
+            <td class="py-2.5 px-4">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-brand-orange/10 text-brand-orange border border-brand-orange/40">
                 {{ log.status_label }}
               </span>
             </td>
 
             <!-- Método de Verificación -->
-            <td class="py-2.5 px-3 text-slate-400">
+            <td class="py-2.5 px-4 text-black/80 font-medium">
               <span class="flex items-center gap-1">
-                <Fingerprint class="w-3.5 h-3.5 text-slate-500" />
+                <Fingerprint class="w-3.5 h-3.5 text-brand-orange" />
                 {{ log.verify_type_label }}
               </span>
             </td>
