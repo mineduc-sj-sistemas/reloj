@@ -160,7 +160,7 @@ El desarrollo se organiza en **sprints de complejidad incremental**. Cada sprint
     2. **Mantener Cantidad Neta de Días Solicitados:** Si el agente desea hacer uso efectivo de los 5 días de vacaciones, el sistema traslada automáticamente el 5° día al siguiente día hábil laboral (ej. Lunes de la semana siguiente), recalculando la fecha de regreso al servicio sin solapar feriados.
 - **Reglas de Vigencia Diferenciada:**
   - **Vacaciones (LAO):** Asignadas según escala de antigüedad. Los días sobrantes no gozados en el año pueden acumularse/arrastrarse hacia el siguiente período.
-    - > ⚠️ **Pendiente de corroborar con autoridades:** Definir si la acumulación de vacaciones prescribe al año siguiente o si admite arrastre de hasta 2 períodos consecutivos.
+    - > ⚠️ **Pendiente de corroborar con autoridades:** (1) Escala exacta provincial de días según antigüedad. (2) Si la acumulación prescribe a 1 año o admite arrastre de hasta 2 períodos consecutivos. (3) Modalidad de cálculo: si el sistema debe calcular y sugerir automáticamente los días según la fecha de ingreso/antigüedad o si ellos lo cargan manualmente (se propone cálculo automático con posibilidad de ajuste manual por resoluciones especiales).
   - **Francos Compensatorios:** Se acreditan por operativos o guardias y se van descontando a medida que se gozan.
     - **Regla estricta:** Tienen vigencia exclusiva dentro del **año calendario en curso** (al 31 de diciembre caducan y no se arrastran al año siguiente).
 
