@@ -71,7 +71,7 @@ El desarrollo se organiza en **sprints de complejidad incremental**. Cada sprint
 - `edificios` — id, nombre, direccion, lat, lng
 - `areas` — id, edificio_id, nombre
 - `sectores` — id, area_id, nombre
-- `empleados` — id, nombre, apellido, dni, legajo, pin_reloj (string, nullable, unique), sexo (string, nullable), fecha_nacimiento (date, nullable), tipo_contrato (planta_permanente), activo, motivo_baja (enum: renuncia|fallecimiento|abandono_cargo|jubilacion|cese_contrato|otro, nullable), fecha_baja (date, nullable), resolucion_baja (string, nullable), deleted_at (timestamp SoftDeletes), foto
+- `empleados` — id, nombre, apellido, dni, legajo, pin_reloj (string, nullable, unique), sexo (string, nullable), fecha_nacimiento (date, nullable), fecha_ingreso (date, nullable), tipo_contrato (planta_permanente), activo, motivo_baja (enum: renuncia|fallecimiento|abandono_cargo|jubilacion|cese_contrato|otro, nullable), fecha_baja (date, nullable), resolucion_baja (string, nullable), deleted_at (timestamp SoftDeletes), foto
 - `turnos` — id, nombre, hora_inicio, hora_fin, horas_diarias, horas_semanales, es_plantilla (boolean, default true)
 - `asignaciones_laborales` — id, empleado_id, sector_id, turno_id, dias_semana (JSON), fecha_desde, fecha_hasta (nullable), horario_personalizado_inicio (nullable), horario_personalizado_fin (nullable), justificacion_cambio (nullable), activa
 - `excepciones_turno` — id, empleado_id, fecha, hora_inicio, hora_fin, justificacion, aprobado_por (user_id)
@@ -79,6 +79,7 @@ El desarrollo se organiza en **sprints de complejidad incremental**. Cada sprint
 - `marcaciones_brutas` — id, empleado_id (nullable), pin_marcado, dispositivo_id, marcado_en (timestamp), direccion (entrada|salida|desconocida), sincronizado
 - `jornadas_calculadas` — id, empleado_id, fecha, entrada_en, salida_en, dispositivo_entrada_id, dispositivo_salida_id, es_itinerante (default false), horas_trabajadas, estado (presente|ausente|tardanza_permitida|tardanza_intolerable|licencia|feriado|justificado)
 - `configuraciones` — tolerancias de tardanza (minutos), tolerancia intolerable, dias_consecutivos_alerta_abandono (default: 5)
+- `feriados` — id, fecha (date, unique), descripcion, tipo (nacional|provincial|asueto)
 - `notificaciones` — alertas del sistema
 
 #### 1.2 Funcionalidad y Pruebas
@@ -108,6 +109,8 @@ El desarrollo se organiza en **sprints de complejidad incremental**. Cada sprint
 - `operativos_especiales` — id, nombre, memo_resolucion, fecha_desde, fecha_hasta, modalidad (dia_habil_sin_reloj|fin_de_semana_refuerzo|mixto), horas_reconocidas_por_dia (decimal), creado_por (user_id), created_at
 - `empleados_operativos` — id, operativo_id, empleado_id, fecha, horas_reconocidas, tipo_compensacion (franco_compensatorio|horas_extras|jornal_completo)
 - `banco_horas_compensatorias` — id, empleado_id, operativo_id (nullable), tipo (credito|debito), horas (decimal), saldo_resultante (decimal), fecha_movimiento, motivo, aprobado_por (user_id)
+- `licencias` — id, empleado_id, tipo (vacaciones_ordinarias|franco_compensatorio|medica|familiar|otro), origen (enum: oficina_personal|cidi|expediente, default: oficina_personal), codigo_tramite_externo (string, nullable), fecha_desde, fecha_hasta, dias_solicitados, estado (solicitada|aprobada|rechazada|cancelada), aprobado_por (user_id, nullable), nota_resolucion (string, nullable), observaciones (text, nullable)
+- `saldos_licencias_empleado` — id, empleado_id, anio_periodo (integer), tipo (vacaciones|franco_compensatorio), dias_asignados (integer, nullable), dias_acumulados_anterior (integer, default 0), dias_gozados (integer, default 0), dias_restantes (integer, nullable), fecha_vencimiento (date, nullable)
 
 #### 2.2 Algoritmo de Jornada Multi-Sede y Salidas en Otra Dependencia (`JornadaService`)
 - Consolidación por `(empleado_id, fecha)` unificando marcaciones de distintos dispositivos:
@@ -133,7 +136,35 @@ El desarrollo se organiza en **sprints de complejidad incremental**. Cada sprint
     - Si la sumatoria semanal cumple con la carga pactada (ej. $\ge$ 30 horas): la semana queda cumplida al 100% en verde.
     - Si al finalizar la semana quedan horas adeudadas no devueltas, únicamente ese saldo faltante pasa como débito horario.
 
-#### 2.4 Auto-Match Inteligente de PIN a DNI
+#### 2.4 Módulo de Licencias Ordinarias (Vacaciones), Antigüedad y Francos Compensatorios
+**Ruta Vue:** `/licencias`, `/usuarios/:id/licencias`
+
+- **Principio de Adopción Progresiva y Campos Nullable:**
+  - Los campos de antigüedad y saldos iniciales son `nullable`. Se evita paralizar la gestión diaria o exigir la digitalización masiva y previa de legajos históricos en papel.
+  - **Carga Just-in-Time ante Inasistencias:** Cuando un empleado solicita justificar días (por vacaciones o franco), la oficina de personal ingresa al módulo para emitir la licencia. Esto impacta de inmediato en `jornadas_calculadas` con estado `licencia`, asegurando que el reloj ZKTeco y el sistema no computen inasistencias injustificadas ni disparen alertas de abandono. En ese mismo acto, el operador puede cargar o actualizar la fecha de ingreso/antigüedad del agente.
+- **Enfoque Híbrido Omnicanal (Oficina Presencial + API Preparada para CiDi):**
+  - **Autonomía 100% Inmediata (Sin esperar a CiDi):** El sistema web funciona de forma completamente autónoma desde el primer día. Los empleados pueden tramitar sus licencias de forma presencial en la oficina de personal administrativo.
+  - **Canal Dual / Mismo Motor de Negocio:** La pantalla web de la oficina y la futura API consumen el mismo servicio central (`LicenciaService`), aplicando exactamente las mismas reglas de validación y control de feriados.
+  - **Trazabilidad por Canal:** Toda licencia registra su campo `origen` (`oficina_personal`, `cidi` o `expediente`) y su `codigo_tramite_externo` para auditoría clara.
+  - **API Lista para Ofrecer a CiDi:** Se dejan diseñados y documentados los endpoints (`GET disponibilidad` y `POST licencias/cidi`). Cuando el equipo provincial de CiDi decida habilitar la funcionalidad, el Ministerio ya contará con la API lista para integrarse de inmediato.
+- **Circuito Administrativo Real de Solicitud:**
+  1. **Consulta de Disponibilidad:** El agente solicita conocer sus días disponibles; el sistema informa el saldo asignado por antigüedad y los días remanentes acumulados.
+  2. **Solicitud de Fechas (Bloque o Fraccionado):** Se permite solicitar la licencia en bloque completo, en períodos fraccionados o en días individuales sueltos (`fecha_desde` a `fecha_hasta`).
+  3. **Control y Validación:** Si el saldo está cargado, el sistema descuenta los días correspondientes y alerta si la solicitud excede el cupo disponible. Si no está cargado aún, permite la justificación preventiva con advertencia amigable.
+  4. **Firma y Autorización Jerárquica:** El rol `jefe` o `super_admin` formaliza la aprobación (`estado = aprobada`), dejando constancia de la nota, resolución o firma de las autoridades.
+- **Tratamiento Inteligente de Feriados y Asuetos (Sin Solapamiento Ni Descuento Indebido):**
+  - **Regla estricta:** Un feriado nacional, provincial o asueto ministerial **nunca debe descontar días del saldo de vacaciones ni de francos** del empleado.
+  - **Detección Automática:** Al seleccionar un intervalo de fechas (ej. Lunes a Viernes), el sistema cruza contra la tabla `feriados` y el calendario laboral del turno asignado.
+  - **Asistente de Propuesta en la Solicitud:** Si se detecta un feriado intermedio (ej. Miércoles feriado dentro de una semana de 5 días):
+    1. **Mantener Rango Calendario:** Se computan solo **4 días** a descontar del saldo de vacaciones del agente, registrando el Miércoles formalmente como `feriado` (el agente ahorra ese día en su cupo anual).
+    2. **Mantener Cantidad Neta de Días Solicitados:** Si el agente desea hacer uso efectivo de los 5 días de vacaciones, el sistema traslada automáticamente el 5° día al siguiente día hábil laboral (ej. Lunes de la semana siguiente), recalculando la fecha de regreso al servicio sin solapar feriados.
+- **Reglas de Vigencia Diferenciada:**
+  - **Vacaciones (LAO):** Asignadas según escala de antigüedad. Los días sobrantes no gozados en el año pueden acumularse/arrastrarse hacia el siguiente período.
+    - > ⚠️ **Pendiente de corroborar con autoridades:** Definir si la acumulación de vacaciones prescribe al año siguiente o si admite arrastre de hasta 2 períodos consecutivos.
+  - **Francos Compensatorios:** Se acreditan por operativos o guardias y se van descontando a medida que se gozan.
+    - **Regla estricta:** Tienen vigencia exclusiva dentro del **año calendario en curso** (al 31 de diciembre caducan y no se arrastran al año siguiente).
+
+#### 2.5 Auto-Match Inteligente de PIN a DNI
 - Si en un reloj se cambia un ID de 4 dígitos a DNI: al recibir la marcación, el sistema busca coincidencia en `empleados.dni`.
 - Auto-asocia la marca a la persona, actualiza `pin_reloj = DNI` y guarda el cambio en `historial_pins_reloj`. Responde a: *"¿A qué ID pertenecía antes?"*.
 - **Criterio de Validación:** Fichar entrada en reloj A, salida en reloj B, crear un operativo especial afectando a empleados en día hábil y fin de semana, y verificar acreditación correcta en jornadas y banco de horas.
@@ -259,6 +290,9 @@ El desarrollo se organiza en **sprints de complejidad incremental**. Cada sprint
 - [ ] Módulo de Operativos Especiales (`/operativos`): carga masiva de personal afectado por Memo/Resolución ministerial.
 - [ ] Justificación automática del 100% de la jornada para operativos en días hábiles sin reloj disponible (evita ausencias indebidas).
 - [ ] Banco de horas compensatorias (`banco_horas_compensatorias`) para refuerzos en sábados, domingos y feriados.
+- [ ] Módulo de Licencias (`/licencias`): solicitud total o fraccionada, aprobación jerárquica y exención de cómputo de faltas en reloj.
+- [ ] Gestión no bloqueante de saldos con campos `nullable` y carga Just-in-Time al justificar inasistencias.
+- [ ] Arrastre interanual de saldo de vacaciones sobrantes y caducidad estricta de francos compensatorios al 31 de diciembre.
 - [ ] Auto-match inteligente al cambiar PIN a DNI en el reloj y registro de auditoría en `historial_pins_reloj`.
  
 ### Sprint 3 — Distribución Biométrica y Clave
